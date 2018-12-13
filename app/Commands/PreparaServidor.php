@@ -42,7 +42,7 @@ class PreparaServidor extends Command
         $host = $ssh_array[1];
         $this->testaConexao($user);
         do {
-            $option = $this->menu('Lindinaldo configurações de servidor para ==> ' . $host, [
+            $option = $this->menu('configurações de servidor para ==> ' . $host, [
                 'ssh' => 'Configurar a chave ssh',
                 'nfs' => ' NFS ',
                 'nginx' => 'instalar e configurar nginx',
@@ -214,13 +214,11 @@ class PreparaServidor extends Command
             exec("ssh $this->ssh 'sudo rm -rf /etc/nginx/sites-enabled/default'", $opt, $err);
             $host = $this->ask("qual o host padrao ? ");
             $this->arquivoConfNginx($host,"padrao");
-            $host = $this->ask("qual o host padrao da revenda ? ");
-            $this->arquivoConfNginx($host,"revenda","/landings/revenda");
 
             $this->ask('continue [ENTER]');
         }
     }
-    private function arquivoConfNginx($host,$nomeconf,$pasta="/landings"){
+    private function arquivoConfNginx($host,$nomeconf,$pasta="/var/www/html"){
         $this->validaPastaCompartilhadaEcria($pasta);
         $conf = "
             server {
@@ -251,7 +249,7 @@ class PreparaServidor extends Command
             $this->ask('continue [ENTER]');
 
         } else {
-            exec("ssh $this->ssh 'sudo echo \"<html><body>servidor configurado pelo lindinaldo</body></html>\">/landings/index.html'", $opt, $err);
+            exec("ssh $this->ssh 'sudo echo \"<html><body>servidor configurado pelo lindinaldo</body></html>\">/var/www/html/index.html'", $opt, $err);
             $this->info("reiniciando nginx");
             exec("ssh $this->ssh 'sudo service nginx reload'", $opt, $ret);
             if ($ret) {
@@ -323,10 +321,10 @@ class PreparaServidor extends Command
                 }
             } while ($ip == "");
 
-            $this->validaPastaCompartilhadaEcria("/landings");
+            $this->validaPastaCompartilhadaEcria("/var/www/html");
             $this->comment("Criando a regra de compartilhamento");
             exec("ssh $this->ssh 'sudo chmod 777 /etc/exports'");
-            exec("ssh  $this->ssh 'sudo echo \"/landings $ip(rw,no_root_squash,sync)\">>/etc/exports '");
+            exec("ssh  $this->ssh 'sudo echo \"/var/www/html $ip(rw,no_root_squash,sync)\">>/etc/exports '");
             if (!$this->reiniciarNfs()) {
                 $this->error("Erro ao reiniciar");
                 $this->error("Rollback sendo iniciado");
